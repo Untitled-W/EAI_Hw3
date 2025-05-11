@@ -1,0 +1,34 @@
+# setup github repo locally
+
+```bash
+git init; git add .; git commit -am "init repo"
+git remote add origin [url]
+git push origin master
+```
+
+# setup github repo remotely
+
+## github authentification
+
+```bash
+cd ~/.ssh
+ssh-keygen -f wmq
+cat ./wmq.pub >> ./authorized_keys //加入到ssh列表
+cat ./wmq.pub // 加入到github SSH认证
+
+// 新建一个agent才能认证
+ssh-agent bash
+ssh-add ~/.ssh/wmq.pub 
+ssh -T git@github.com
+```
+
+## repo link
+
+```bash
+// 进入到仓库，配置config，可以为本仓库配置而不影响全局
+cd repo
+git config user.name xxx
+git config user.email xxx
+git config credential.helper store
+```
+
