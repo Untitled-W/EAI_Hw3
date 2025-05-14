@@ -76,33 +76,22 @@ class MyGetupEnv(Getup):
         #   4. body angular velocity (error to zero)
 
         # Reward term 1: Encourage the body to maintain the desired height
-        height_error = jp.abs(body_pos[2] - DESIRED_BODY_HEIGHT)
-        rew_term_1 = -height_error
+        rew_term_1 = jp.exp(-jp.abs(body_pos[2] - DESIRED_BODY_HEIGHT))
 
         # Reward term 2: Encourage the body to maintain an upright orientation
-        orientation_error = 1.0 - jp.dot(up_vec, gravity_vector)
-        rew_term_2 = -orientation_error
+        rew_term_2 = jp.dot(up_vec, gravity_vector)
 
         # Reward term 3: Penalize deviation from the default joint positions
-        joint_position_error = jp.sum(jp.square(joint_qpos - default_qpos))
-        rew_term_3 = -joint_position_error
-
-        # Reward term 4: Penalize angular velocity to encourage stability
-        angular_velocity_error = jp.sum(jp.square(body_ang_vel))
-        rew_term_4 = -angular_velocity_error
+        rew_term_3 = jp.exp(-jp.sum(jp.square(joint_qpos - default_qpos)))
 
         # Combine all reward terms
-        reward = 5 * rew_term_1 + rew_term_2 + rew_term_3 + 5 * rew_term_4
+        reward =  rew_term_1
         # TODO: End of your code.
 
         state.info["last_last_act"] = state.info["last_act"]
         state.info["last_act"] = action
 
         state.metrics["reward"] = reward
-        state.metrics["height_error"] = height_error
-        state.metrics["orientation_error"] = orientation_error
-        state.metrics["joint_position_error"] = joint_position_error
-        state.metrics["angular_velocity_error"] = angular_velocity_error
         done = jp.float32(done)
         state = state.replace(data=data, obs=obs, reward=reward, done=done)
         return state
@@ -148,7 +137,7 @@ def create_env():
         sim_dt=0.004,
         Kp=35.0,
         Kd=0.5,
-        episode_length=300,
+        episode_length=2000,
         drop_from_height_prob=0.6,
         settle_time=0.5,
         action_repeat=1,
@@ -175,7 +164,7 @@ def create_param():
     ppo_params = config_dict.create(
         num_timesteps=40_000_000,
         num_evals=0,
-        reward_scaling=1.0,
+        reward_scaling=.8,
         episode_length=2000,
         normalize_observations=True,
         action_repeat=1,
@@ -214,7 +203,7 @@ def save_experiment(params, metrics):
     print(f"Experiment saved to {save_dir}")
 
 
-def save_video(env, make_inference_fn, params):
+def save_video(env, make_inference_fn, params, i):
     import mediapy as media
      
     render_length = 500
@@ -256,7 +245,7 @@ def save_video(env, make_inference_fn, params):
     plt.title(f"Height error: {height_error:.3f}")
     plt.xlabel("steps")
     plt.ylabel("body height")
-    plt.savefig(os.path.join(save_dir, "part2_height_error.png"))
+    plt.savefig(os.path.join(save_dir, f"part2_height_error_{i}.png"))
 
     render_every = 2
     fps = 1.0 / eval_env.dt / render_every
@@ -276,8 +265,13 @@ def save_video(env, make_inference_fn, params):
         width=640,
         scene_option=scene_option,
     )
-    media.write_video(f'{save_dir}/_video.mp4', frames)
+    media.write_video(f'{save_dir}/_video_{i}.mp4', frames)
     print("video saved to part2.mp4")
+
+
+def progress_fn(progress, metrics):
+    with open(f"{save_dir}/progress_log.txt", "a") as f:
+        f.write(f"Progress: {progress * 100:.2f}%, Metrics: {metrics}\n")
 
 
 def train_ppo():
@@ -311,10 +305,10 @@ def train_ppo():
     train_fn = functools.partial(
         ppo.train, **dict(ppo_training_params),
         network_factory=network_factory,
-        # progress_fn=progress,
+        progress_fn=progress_fn,
         num_eval_envs=100,
         log_training_metrics=True,
-        training_metrics_steps=1_000_000
+        training_metrics_steps=5_000_000
     )
 
     env = create_env()
@@ -329,7 +323,9 @@ def train_ppo():
     
     # Save Here
     save_experiment(params, metrics)
-    save_video(env, make_inference_fn, params)
+    
+    for i in range(5):
+        save_video(env, make_inference_fn, params, i)
     
     
 def read_from_checkpoint():
@@ -342,5 +338,3 @@ def read_from_checkpoint():
 if __name__ == '__main__':
     
     train_ppo()
-    # save_dir = "./exps2/0512_0052"
-    # read_from_checkpoint()

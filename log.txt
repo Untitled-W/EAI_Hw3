@@ -24,11 +24,20 @@ ssh -T git@github.com
 
 ## repo link
 
+要么在clone的时候就使用git ssh，这样省的后续配置；
+
+如果使用了http，需要做如下更改：
+
 ```bash
 // 进入到仓库，配置config，可以为本仓库配置而不影响全局
 cd repo
 git config user.name xxx
 git config user.email xxx
 git config credential.helper store
+
+//改变git的连接
+git remote rm origin
+git remote add origin xxx
+git push origin master
 ```
 

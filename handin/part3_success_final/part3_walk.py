@@ -98,11 +98,9 @@ class MyWalkEnv(Joystick):
 
         # TODO: your code here. hint: use DESIRED_XY_LIN_VEL and DESIRED_YAW_ANG_VEL as goal
         
-        DESIRED_XY_LIN_VEL
-        tracking_lin_vel = jp.sum(jp.square(body_lin_vel[:2] - DESIRED_XY_LIN_VEL))
+        tracking_lin_vel = jp.exp(-jp.sum(jp.square(body_lin_vel[:2] - DESIRED_XY_LIN_VEL)))
 
-        DESIRED_YAW_ANG_VEL
-        tracking_ang_vel = jp.sum(jp.square(body_ang_vel[2] - DESIRED_YAW_ANG_VEL))
+        tracking_ang_vel = jp.exp(-jp.sum(jp.square(body_ang_vel[2] - DESIRED_YAW_ANG_VEL)))
 
         # TODO: End of your code.
         info = state.info
@@ -310,7 +308,7 @@ def create_param():
     from ml_collections import config_dict
 
     ppo_params = config_dict.create(
-        num_timesteps=200_000_000,
+        num_timesteps=60_000_000,
         num_evals=0,
         reward_scaling=1.0,
         episode_length=500,
@@ -440,7 +438,7 @@ def train_ppo():
         ppo.train, **dict(ppo_training_params),
         network_factory=network_factory,
         # progress_fn=progress,
-        num_eval_envs=100,
+        num_eval_envs=0,
         log_training_metrics=True,
         training_metrics_steps=1_000_000
     )

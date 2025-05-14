@@ -92,7 +92,7 @@ class MyGetupEnv(Getup):
         rew_term_4 = -angular_velocity_error
 
         # Combine all reward terms
-        reward = 5 * rew_term_1 + rew_term_2 + rew_term_3 + 5 * rew_term_4
+        reward = rew_term_1
         # TODO: End of your code.
 
         state.info["last_last_act"] = state.info["last_act"]
@@ -148,7 +148,7 @@ def create_env():
         sim_dt=0.004,
         Kp=35.0,
         Kd=0.5,
-        episode_length=300,
+        episode_length=1000,
         drop_from_height_prob=0.6,
         settle_time=0.5,
         action_repeat=1,
@@ -176,7 +176,7 @@ def create_param():
         num_timesteps=40_000_000,
         num_evals=0,
         reward_scaling=1.0,
-        episode_length=2000,
+        episode_length=3000,
         normalize_observations=True,
         action_repeat=1,
         unroll_length=20,
@@ -342,5 +342,3 @@ def read_from_checkpoint():
 if __name__ == '__main__':
     
     train_ppo()
-    # save_dir = "./exps2/0512_0052"
-    # read_from_checkpoint()
