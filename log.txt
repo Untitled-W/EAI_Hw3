@@ -18,7 +18,7 @@ cat ./wmq.pub // 加入到github SSH认证
 
 // 新建一个agent才能认证
 ssh-agent bash
-ssh-add ~/.ssh/wmq.pub 
+ssh-add ~/.ssh/wmq  // 是私钥！
 ssh -T git@github.com
 ```
 
